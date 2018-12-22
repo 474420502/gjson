@@ -1080,6 +1080,22 @@ func parseObject(c *parseContext, i int, path string) (int, bool) {
 	}
 	return i, false
 }
+
+func escapeRegexpString(rpv string) string {
+	var content []byte
+	lrpv := len(rpv)
+	for i := 0; i < lrpv; i++ {
+		rpvChar := rpv[i]
+		if rpvChar == '\\' {
+			content = append(content, rpv[i+1])
+			i++
+		} else {
+			content = append(content, rpvChar)
+		}
+	}
+	return string(content)
+}
+
 func queryMatches(rp *arrayPathResult, value Result) bool {
 	rpv := rp.query.value
 	if len(rpv) > 2 && rpv[0] == '"' && rpv[len(rpv)-1] == '"' {
@@ -1102,14 +1118,12 @@ func queryMatches(rp *arrayPathResult, value Result) bool {
 			return value.Str >= rpv
 		case "%":
 			if rp.re == nil {
-				rpv = strings.Replace(rpv, `\"`, `"`, -1)
-				rp.re = regexp.MustCompile(rpv)
+				rp.re = regexp.MustCompile(escapeRegexpString(rpv))
 			}
 			return rp.re.MatchString(value.Str)
 		case "!%":
 			if rp.re == nil {
-				rpv = strings.Replace(rpv, `\"`, `"`, -1)
-				rp.re = regexp.MustCompile(rpv)
+				rp.re = regexp.MustCompile(escapeRegexpString(rpv))
 			}
 			return !rp.re.MatchString(value.Str)
 		}
