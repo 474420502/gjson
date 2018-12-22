@@ -390,6 +390,7 @@ func TestBasic1(t *testing.T) {
 		t.Fatalf("expected %v, got %v", 3, count)
 	}
 }
+
 func TestBasic2(t *testing.T) {
 	mtok := get(basicJSON, `loggy.programmers.#[age=101].firstName`)
 	if mtok.String() != "1002.3" {
@@ -399,14 +400,15 @@ func TestBasic2(t *testing.T) {
 	if mtok.String() != "Jason" {
 		t.Fatalf("expected %v, got %v", "Jason", mtok.String())
 	}
-	mtok = get(basicJSON, `loggy.programmers.#[firstName % "Bre*"].email`)
+	mtok = get(basicJSON, `loggy.programmers.#[firstName % "Bre.*"].email`)
 	if mtok.String() != "aaaa" {
 		t.Fatalf("expected %v, got %v", "aaaa", mtok.String())
 	}
-	mtok = get(basicJSON, `loggy.programmers.#[firstName !% "Bre*"].email`)
+	mtok = get(basicJSON, `loggy.programmers.#[firstName !% "Bre.*"].email`)
 	if mtok.String() != "bbbb" {
 		t.Fatalf("expected %v, got %v", "bbbb", mtok.String())
 	}
+
 	mtok = get(basicJSON, `loggy.programmers.#[firstName == "Brett"].email`)
 	if mtok.String() != "aaaa" {
 		t.Fatalf("expected %v, got %v", "aaaa", mtok.String())
@@ -1430,4 +1432,11 @@ func TestArrayValues(t *testing.T) {
 		t.Fatalf("expected '%v', got '%v'", expect, output)
 	}
 
+}
+
+func TestEsonRegexp(t *testing.T) {
+	mtok := get(`{"data": [ {"dat": "123\"", "next": [{"a": "\"32"}, {"a": "32"}]}, {"dat": "234"} ] }`, `data.#[dat % "3\""].next.#[a % "\"32"]#.a`)
+	if mtok.String() != `["\"32"]` {
+		t.Fatalf("expected %v, got %v", `"32`, mtok.String())
+	}
 }

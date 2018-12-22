@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -706,6 +707,8 @@ type arrayPathResult struct {
 		value string
 		all   bool
 	}
+
+	re *regexp.Regexp
 }
 
 func parseArrayPath(path string) (r arrayPathResult) {
@@ -1098,9 +1101,17 @@ func queryMatches(rp *arrayPathResult, value Result) bool {
 		case ">=":
 			return value.Str >= rpv
 		case "%":
-			return match.Match(value.Str, rpv)
+			if rp.re == nil {
+				rpv = strings.Replace(rpv, `\"`, `"`, -1)
+				rp.re = regexp.MustCompile(rpv)
+			}
+			return rp.re.MatchString(value.Str)
 		case "!%":
-			return !match.Match(value.Str, rpv)
+			if rp.re == nil {
+				rpv = strings.Replace(rpv, `\"`, `"`, -1)
+				rp.re = regexp.MustCompile(rpv)
+			}
+			return !rp.re.MatchString(value.Str)
 		}
 	case Number:
 		rpvn, _ := strconv.ParseFloat(rpv, 64)
