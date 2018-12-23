@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"log"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -1151,7 +1150,6 @@ func queryMatches(rp *arrayPathResult, value Result) bool {
 		case "!%":
 			return !match.Match(value.Str, rpv)
 		case "~":
-			log.Println(rpv)
 			if rp.re == nil {
 				rp.re = regexp.MustCompile(rpv)
 			}
