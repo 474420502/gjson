@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"log"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -744,6 +745,7 @@ func parseArrayPath(path string) (r arrayPathResult) {
 							path[i] == '<' ||
 							path[i] == '>' ||
 							path[i] == '%' ||
+							path[i] == '~' ||
 							path[i] == ']' {
 							break
 						}
@@ -779,38 +781,66 @@ func parseArrayPath(path string) (r arrayPathResult) {
 								break
 							}
 						}
-						s = i
-						for ; i < len(path); i++ {
-							if path[i] == '"' {
-								i++
-								s2 := i
-								for ; i < len(path); i++ {
-									if path[i] > '\\' {
-										continue
-									}
-									if path[i] == '"' {
-										// look for an escaped slash
-										if path[i-1] == '\\' {
-											n := 0
-											for j := i - 2; j > s2-1; j-- {
-												if path[j] != '\\' {
-													break
-												}
-												n++
-											}
-											if n%2 == 0 {
-												continue
-											}
+						s = i + 1
+
+						if r.query.op == "~" {
+							pair := path[i]
+							i++
+						GETREGEXPSTR:
+							for ; i < len(path); i++ {
+								if path[i] == pair {
+									for iend := i + 1; iend < len(path); iend++ {
+
+										if path[iend] == ' ' {
+											continue
 										}
-										break
+
+										if path[iend] == ']' {
+											if iend+1 < len(path) && path[iend+1] == '#' {
+												r.query.all = true
+											}
+											break GETREGEXPSTR
+										} else {
+											break
+										}
+
 									}
 								}
-							} else if path[i] == ']' {
-								if i+1 < len(path) && path[i+1] == '#' {
-									r.query.all = true
-								}
-								break
 							}
+						} else {
+
+							for ; i < len(path); i++ {
+								if path[i] == '"' {
+									i++
+									s2 := i
+									for ; i < len(path); i++ {
+										if path[i] > '\\' {
+											continue
+										}
+										if path[i] == '"' {
+											// look for an escaped slash
+											if path[i-1] == '\\' {
+												n := 0
+												for j := i - 2; j > s2-1; j-- {
+													if path[j] != '\\' {
+														break
+													}
+													n++
+												}
+												if n%2 == 0 {
+													continue
+												}
+											}
+											break
+										}
+									}
+								} else if path[i] == ']' {
+									if i+1 < len(path) && path[i+1] == '#' {
+										r.query.all = true
+									}
+									break
+								}
+							} //
 						}
 						if i > len(path) {
 							i = len(path)
@@ -1117,15 +1147,15 @@ func queryMatches(rp *arrayPathResult, value Result) bool {
 		case ">=":
 			return value.Str >= rpv
 		case "%":
+			return match.Match(value.Str, rpv)
+		case "!%":
+			return !match.Match(value.Str, rpv)
+		case "~":
+			log.Println(rpv)
 			if rp.re == nil {
-				rp.re = regexp.MustCompile(escapeRegexpString(rpv))
+				rp.re = regexp.MustCompile(rpv)
 			}
 			return rp.re.MatchString(value.Str)
-		case "!%":
-			if rp.re == nil {
-				rp.re = regexp.MustCompile(escapeRegexpString(rpv))
-			}
-			return !rp.re.MatchString(value.Str)
 		}
 	case Number:
 		rpvn, _ := strconv.ParseFloat(rpv, 64)
