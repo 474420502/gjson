@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"log"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -781,68 +780,32 @@ func parseArrayPath(path string) (r arrayPathResult) {
 								break
 							}
 						}
-						s = i
 
-						if r.query.op == "~" {
-							s = i + 1
-							pair := path[i]
-							i++
-						GETREGEXPSTR:
-							for ; i < len(path); i++ {
-								if path[i] == pair {
-									for iend := i + 1; iend < len(path); iend++ {
+						s = i + 1
+						pair := path[i]
+						i++
+					GETREGEXPSTR:
+						for ; i < len(path); i++ {
+							if path[i] == pair {
+								for iend := i + 1; iend < len(path); iend++ {
 
-										if path[iend] == ' ' {
-											continue
-										}
-
-										if path[iend] == ']' {
-											if iend+1 < len(path) && path[iend+1] == '#' {
-												r.query.all = true
-											}
-											break GETREGEXPSTR
-										} else {
-											break
-										}
-
+									if path[iend] == ' ' {
+										continue
 									}
+
+									if path[iend] == ']' {
+										if iend+1 < len(path) && path[iend+1] == '#' {
+											r.query.all = true
+										}
+										break GETREGEXPSTR
+									} else {
+										break
+									}
+
 								}
 							}
-						} else {
-
-							for ; i < len(path); i++ {
-								if path[i] == '"' {
-									i++
-									s2 := i
-									for ; i < len(path); i++ {
-										if path[i] > '\\' {
-											continue
-										}
-										if path[i] == '"' {
-											// look for an escaped slash
-											if path[i-1] == '\\' {
-												n := 0
-												for j := i - 2; j > s2-1; j-- {
-													if path[j] != '\\' {
-														break
-													}
-													n++
-												}
-												if n%2 == 0 {
-													continue
-												}
-											}
-											break
-										}
-									}
-								} else if path[i] == ']' {
-									if i+1 < len(path) && path[i+1] == '#' {
-										r.query.all = true
-									}
-									break
-								}
-							} //
 						}
+
 						if i > len(path) {
 							i = len(path)
 						}
@@ -1136,7 +1099,6 @@ func queryMatches(rp *arrayPathResult, value Result) bool {
 	case String:
 		switch rp.query.op {
 		case "=":
-			log.Println(rpv, value.Str)
 			return value.Str == rpv
 		case "!=":
 			return value.Str != rpv

@@ -1443,8 +1443,8 @@ func TestRegexp(t *testing.T) {
 }
 
 func TestChinese(t *testing.T) {
-	js := `{"data": [{"f":"广告"}, {"f": "广告"}]}`
-	mtok := get(js, `data.#[f~"广告"]#`)
-	log.Println(mtok.String())
+	js := `{"data": [{"f":"\"广告"}, {"f": "广告"}]}`
+	mtok := get(js, `data.#[f=""广告"]#`)
+	log.Println(mtok.Array()[0].String())
 	t.Error("")
 }
