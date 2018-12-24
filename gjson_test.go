@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"log"
 	"math/rand"
 	"reflect"
 	"strconv"
@@ -1445,6 +1444,7 @@ func TestRegexp(t *testing.T) {
 func TestChinese(t *testing.T) {
 	js := `{"data": [{"f":"\"广告"}, {"f": "广告"}]}`
 	mtok := get(js, `data.#[f=""广告"]#`)
-	log.Println(mtok.Array()[0].String())
-	t.Error("")
+	if mtok.Array()[0].String() != `{"f":"\"广告"}` {
+		t.Error("error", mtok.Array())
+	}
 }
