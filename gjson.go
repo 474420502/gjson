@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"log"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -780,9 +781,10 @@ func parseArrayPath(path string) (r arrayPathResult) {
 								break
 							}
 						}
-						s = i + 1
+						s = i
 
 						if r.query.op == "~" {
+							s = i + 1
 							pair := path[i]
 							i++
 						GETREGEXPSTR:
@@ -1134,6 +1136,7 @@ func queryMatches(rp *arrayPathResult, value Result) bool {
 	case String:
 		switch rp.query.op {
 		case "=":
+			log.Println(rpv, value.Str)
 			return value.Str == rpv
 		case "!=":
 			return value.Str != rpv

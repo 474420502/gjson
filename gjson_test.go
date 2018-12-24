@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"log"
 	"math/rand"
 	"reflect"
 	"strconv"
@@ -1434,9 +1435,16 @@ func TestArrayValues(t *testing.T) {
 
 }
 
-func TestEsonRegexp(t *testing.T) {
-	mtok := get(`{"data": [ {"dat": "123\"", "next": [{"a": "\"32"}, {"a": "32"}]}, {"dat": "234"} ] }`, `data.#[dat % "3\""].next.#[a % "\"32"]#.a`)
+func TestRegexp(t *testing.T) {
+	mtok := get(`{"data": [ {"dat": "123\"", "next": [{"a": "\"32"}, {"a": "32"}]}, {"dat": "234"} ] }`, `data.#[dat ~ "3\""].next.#[a ~ @\"32@]#.a`)
 	if mtok.String() != `["\"32"]` {
 		t.Fatalf("expected %v, got %v", `"32`, mtok.String())
 	}
+}
+
+func TestChinese(t *testing.T) {
+	js := `{"data": [{"f":"广告"}, {"f": "广告"}]}`
+	mtok := get(js, `data.#[f~"广告"]#`)
+	log.Println(mtok.String())
+	t.Error("")
 }
